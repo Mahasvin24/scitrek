@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { LogOutIcon } from "lucide-react"
+import { LogOutIcon, UserIcon } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -16,15 +16,11 @@ import {
 import { SheetClose } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 
-function usernameInitials(name: string) {
-  return name.slice(0, 2).toUpperCase()
-}
-
-function NavUserAvatar({ username, className }: { username: string; className?: string }) {
+function NavUserAvatar({ className }: { className?: string }) {
   return (
     <Avatar size="sm" className={className}>
-      <AvatarFallback className="bg-white text-xs font-medium text-foreground">
-        {usernameInitials(username)}
+      <AvatarFallback className="bg-white text-muted-foreground">
+        <UserIcon className="size-4" aria-hidden />
       </AvatarFallback>
     </Avatar>
   )
@@ -72,7 +68,7 @@ function NavUserDesktop({ username, loading, onLogout }: NavUserProps) {
           />
         }
       >
-        <NavUserAvatar username={username} />
+        <NavUserAvatar />
         <span className="truncate text-sm font-medium">{username}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="min-w-40">
@@ -123,7 +119,7 @@ function NavUserMobile({
   return (
     <div className={cn("flex flex-col gap-2", className)}>
       <div className="flex items-center gap-3 px-2 py-1">
-        <NavUserAvatar username={username} />
+        <NavUserAvatar />
         <span className="truncate text-sm font-medium text-foreground">
           {username}
         </span>

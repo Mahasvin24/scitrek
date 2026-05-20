@@ -6,7 +6,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
-KEYS_DIR = Path(__file__).resolve().parent / "keys"
+DATA_DIR = Path(os.getenv("DATA_DIR", Path(__file__).resolve().parent))
+KEYS_DIR = DATA_DIR / "keys"
 PRIVATE_KEY_PATH = KEYS_DIR / "private.pem"
 PUBLIC_KEY_PATH = KEYS_DIR / "public.pem"
 
