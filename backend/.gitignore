@@ -27,6 +27,9 @@ htmlcov/
 # Local SQLite (created by app; contains user data)
 users.db
 
+# RSA key pair (generated locally if not provided via env)
+keys/
+
 # Secrets (root .gitignore also covers these; listed for clarity when working in backend/)
 .env
 .env.*
