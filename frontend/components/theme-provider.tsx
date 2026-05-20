@@ -26,12 +26,19 @@ function isTypingTarget(target: EventTarget | null) {
     return false
   }
 
-  return (
-    target.isContentEditable ||
-    target.tagName === "INPUT" ||
-    target.tagName === "TEXTAREA" ||
-    target.tagName === "SELECT"
+  return Boolean(
+    target.closest(
+      "input, textarea, select, [contenteditable='true'], [contenteditable='']",
+    ),
   )
+}
+
+function isThemeToggleKey(event: KeyboardEvent) {
+  if (event.code === "KeyD") {
+    return true
+  }
+  const key = event.key
+  return typeof key === "string" && key.length === 1 && key.toLowerCase() === "d"
 }
 
 function ThemeHotkey() {
@@ -47,7 +54,7 @@ function ThemeHotkey() {
         return
       }
 
-      if (event.key.toLowerCase() !== "d") {
+      if (!isThemeToggleKey(event)) {
         return
       }
 
