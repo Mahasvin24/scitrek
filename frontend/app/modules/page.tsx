@@ -4,10 +4,70 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { useEffect, useRef, useState } from "react"
 
-import { MessageSquareTextIcon, RotateCcwIcon, UserIcon } from "lucide-react"
+import { RotateCcwIcon, UserIcon } from "lucide-react"
+
+const LINES = [
+  "Hello! I am your Day 1 guide.",
+  "Today we are exploring how enzymes speed reactions.",
+  "Tap again and we will start the first mini activity.",
+]
+
+const TYPING_MS = 36
+const BUBBLE_TRANSITION_MS = 180
 
 export default function ModulesPage() {
+  const [lineIndex, setLineIndex] = useState(0)
+  const [typedCount, setTypedCount] = useState(0)
+  const [bubbleVisible, setBubbleVisible] = useState(true)
+  const swapTimeoutRef = useRef<number | null>(null)
+
+  const currentLine = LINES[lineIndex]
+  const typedText = currentLine.slice(0, typedCount)
+  const isTyping = typedCount < currentLine.length
+
+  useEffect(() => {
+    if (!isTyping) return
+
+    const timeout = window.setTimeout(() => {
+      setTypedCount((prev) => prev + 1)
+    }, TYPING_MS)
+
+    return () => window.clearTimeout(timeout)
+  }, [isTyping, typedCount])
+
+  useEffect(() => {
+    return () => {
+      if (swapTimeoutRef.current) {
+        window.clearTimeout(swapTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  function swapBubbleLine(nextLineIndex: number) {
+    if (swapTimeoutRef.current) {
+      window.clearTimeout(swapTimeoutRef.current)
+    }
+
+    setBubbleVisible(false)
+    swapTimeoutRef.current = window.setTimeout(() => {
+      setLineIndex(nextLineIndex)
+      setTypedCount(0)
+      setBubbleVisible(true)
+      swapTimeoutRef.current = null
+    }, BUBBLE_TRANSITION_MS)
+  }
+
+  function goToNextLine() {
+    const nextLine = (lineIndex + 1) % LINES.length
+    swapBubbleLine(nextLine)
+  }
+
+  function replayTyping() {
+    swapBubbleLine(lineIndex)
+  }
+
   return (
     <main className="flex min-h-svh flex-col bg-[#f5f5f0]">
       <Navbar />
@@ -26,19 +86,55 @@ export default function ModulesPage() {
 
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-4">
-            <Avatar size="lg" className="mt-1">
-              <AvatarFallback className="bg-white text-muted-foreground">
-                <UserIcon className="size-5" aria-hidden />
-              </AvatarFallback>
-            </Avatar>
+            <div className="flex flex-col items-center gap-2 pt-1">
+              <Avatar size="lg">
+                <AvatarFallback className="bg-white text-muted-foreground">
+                  <UserIcon className="size-5" aria-hidden />
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs font-medium tracking-wide text-muted-foreground">
+                Guide
+              </span>
+            </div>
 
-            <Card className="w-[min(34rem,calc(100vw-6rem))] border-0 bg-white/80 shadow-sm ring-1 ring-foreground/10">
-              <CardContent className="relative px-4 py-3">
-                <div className="flex items-center gap-2 text-sm text-foreground">
-                  <MessageSquareTextIcon className="size-4 text-muted-foreground" aria-hidden />
-                  <span className="font-medium">Hello!</span>
-                </div>
-                <div className="absolute -left-1 top-4 size-3 rotate-45 bg-white/80 ring-1 ring-foreground/10" />
+            <Card
+              className="relative w-[min(26rem,calc(100vw-8rem))] overflow-visible rounded-2xl border-0 bg-white shadow-md ring-1 ring-foreground/10 transition-all duration-200 hover:shadow-lg"
+              onClick={goToNextLine}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault()
+                  goToNextLine()
+                }
+              }}
+              aria-label="Next dialogue line"
+            >
+              <span
+                className="absolute -left-2 top-5 size-4 rotate-45 rounded-[2px] bg-white ring-1 ring-foreground/10"
+                aria-hidden
+              />
+              <CardContent
+                className={`px-4 py-3 transition-all duration-200 ${
+                  bubbleVisible
+                    ? "translate-y-0 opacity-100"
+                    : "pointer-events-none -translate-y-1 opacity-0"
+                }`}
+              >
+                <p
+                  key={lineIndex}
+                  className="min-h-12 text-sm leading-relaxed text-foreground motion-safe:animate-in motion-safe:fade-in-0"
+                >
+                  {typedText}
+                  <span
+                    className="ml-0.5 inline-block h-4 w-0.5 translate-y-0.5 bg-foreground/70 align-middle animate-pulse"
+                    aria-hidden
+                  />
+                </p>
+
+                <p className="mt-2 text-xs text-muted-foreground/80">
+                  Tap bubble to continue
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -46,9 +142,7 @@ export default function ModulesPage() {
           <Button
             variant="outline"
             className="w-full rounded-full sm:w-auto"
-            onClick={() => {
-              // Stub for now — the animation will be added later.
-            }}
+            onClick={replayTyping}
           >
             <RotateCcwIcon aria-hidden />
             Replay animation
