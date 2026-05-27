@@ -40,16 +40,6 @@ function EnzymeSimulation({
           </div>
         )}
 
-        <div
-          className="pointer-events-none absolute h-1 rounded-full bg-[#5a8ee0]/60 transition-all duration-300"
-          style={{
-            left: Math.min(substratePos.x, enzymePos.x),
-            top: substratePos.y,
-            width: Math.abs(enzymePos.x - substratePos.x),
-            opacity: isConnected ? 1 : 0,
-          }}
-        />
-
         <button
           type="button"
           onPointerDown={onSubstratePointerDown}
@@ -63,6 +53,9 @@ function EnzymeSimulation({
             transition: isDragging
               ? "transform 120ms ease-out"
               : "left 1600ms linear, top 1600ms linear, transform 120ms ease-out",
+            boxShadow: isConnected
+              ? "0 0 0 4px rgba(90, 142, 224, 0.20), 0 0 20px rgba(90, 142, 224, 0.45)"
+              : undefined,
           }}
         >
           <span
@@ -80,6 +73,9 @@ function EnzymeSimulation({
             left: enzymePos.x - ENZYME_SIZE / 2,
             top: enzymePos.y - ENZYME_SIZE / 2,
             transition: "left 1600ms linear, top 1600ms linear, transform 120ms ease-out",
+            boxShadow: isConnected
+              ? "0 0 0 4px rgba(58, 158, 123, 0.20), 0 0 22px rgba(58, 158, 123, 0.45)"
+              : undefined,
           }}
         >
           <span
