@@ -14,14 +14,25 @@ const LINES = [
   "Tap again and we will start the first mini activity.",
 ]
 
-const TYPING_MS = 36
+const TYPING_MS = 18
 const BUBBLE_TRANSITION_MS = 180
+const BUBBLE_START_PX = 220
+const BUBBLE_GROW_MS = 360
+const BUBBLE_MAX_PX = 640
+const BUBBLE_SIDE_PADDING_PX = 32
+const BUBBLE_EXTRA_PX = 10
+const BUBBLE_MIN_PX = 220
 
 export default function ModulesPage() {
   const [lineIndex, setLineIndex] = useState(0)
   const [typedCount, setTypedCount] = useState(0)
   const [bubbleVisible, setBubbleVisible] = useState(true)
+  const [bubbleWidthPx, setBubbleWidthPx] = useState(BUBBLE_START_PX)
+  const [bubbleTargetPx, setBubbleTargetPx] = useState(BUBBLE_START_PX)
   const swapTimeoutRef = useRef<number | null>(null)
+  const growTimeoutRef = useRef<number | null>(null)
+  const measureLineRef = useRef<HTMLSpanElement | null>(null)
+  const measureHintRef = useRef<HTMLSpanElement | null>(null)
 
   const currentLine = LINES[lineIndex]
   const typedText = currentLine.slice(0, typedCount)
@@ -42,18 +53,49 @@ export default function ModulesPage() {
       if (swapTimeoutRef.current) {
         window.clearTimeout(swapTimeoutRef.current)
       }
+      if (growTimeoutRef.current) {
+        window.clearTimeout(growTimeoutRef.current)
+      }
     }
   }, [])
+
+  useEffect(() => {
+    const lineWidth = measureLineRef.current?.getBoundingClientRect().width ?? BUBBLE_MIN_PX
+    const hintWidth = measureHintRef.current?.getBoundingClientRect().width ?? 0
+    const desired = Math.max(lineWidth, hintWidth) + BUBBLE_SIDE_PADDING_PX + BUBBLE_EXTRA_PX
+    const viewportMax = typeof window !== "undefined" ? window.innerWidth - 120 : BUBBLE_MAX_PX
+    const nextTarget = Math.min(BUBBLE_MAX_PX, viewportMax, desired)
+    setBubbleTargetPx(Math.max(BUBBLE_MIN_PX, nextTarget))
+  }, [currentLine])
+
+  useEffect(() => {
+    if (!bubbleVisible) return
+
+    if (growTimeoutRef.current) {
+      window.clearTimeout(growTimeoutRef.current)
+    }
+
+    // Wait one frame after reveal, then animate growth to target size.
+    growTimeoutRef.current = window.setTimeout(() => {
+      setBubbleWidthPx(bubbleTargetPx)
+      growTimeoutRef.current = null
+    }, 30)
+  }, [bubbleVisible, bubbleTargetPx])
 
   function swapBubbleLine(nextLineIndex: number) {
     if (swapTimeoutRef.current) {
       window.clearTimeout(swapTimeoutRef.current)
+    }
+    if (growTimeoutRef.current) {
+      window.clearTimeout(growTimeoutRef.current)
+      growTimeoutRef.current = null
     }
 
     setBubbleVisible(false)
     swapTimeoutRef.current = window.setTimeout(() => {
       setLineIndex(nextLineIndex)
       setTypedCount(0)
+      setBubbleWidthPx(BUBBLE_START_PX)
       setBubbleVisible(true)
       swapTimeoutRef.current = null
     }, BUBBLE_TRANSITION_MS)
@@ -98,7 +140,11 @@ export default function ModulesPage() {
             </div>
 
             <Card
-              className="relative w-[min(26rem,calc(100vw-8rem))] overflow-visible rounded-2xl border-0 bg-white shadow-md ring-1 ring-foreground/10 transition-all duration-200 hover:shadow-lg"
+              className="relative max-w-[min(40rem,calc(100vw-8rem))] overflow-visible rounded-2xl border-0 bg-white shadow-md ring-1 ring-foreground/10 transition-[width,box-shadow] hover:shadow-lg"
+              style={{
+                width: `${bubbleWidthPx}px`,
+                transitionDuration: `${BUBBLE_GROW_MS}ms`,
+              }}
               onClick={goToNextLine}
               role="button"
               tabIndex={0}
@@ -117,26 +163,39 @@ export default function ModulesPage() {
               <CardContent
                 className={`px-4 py-3 transition-all duration-200 ${
                   bubbleVisible
-                    ? "translate-y-0 opacity-100"
-                    : "pointer-events-none -translate-y-1 opacity-0"
+                    ? "scale-100 opacity-100"
+                    : "pointer-events-none scale-90 opacity-0"
                 }`}
               >
                 <p
                   key={lineIndex}
-                  className="min-h-12 text-sm leading-relaxed text-foreground motion-safe:animate-in motion-safe:fade-in-0"
+                  className="text-sm leading-relaxed text-foreground motion-safe:animate-in motion-safe:fade-in-0"
                 >
                   {typedText}
-                  <span
-                    className="ml-0.5 inline-block h-4 w-0.5 translate-y-0.5 bg-foreground/70 align-middle animate-pulse"
-                    aria-hidden
-                  />
+                  {isTyping && (
+                    <span
+                      className="ml-0.5 inline-block h-4 w-0.5 translate-y-0.5 bg-foreground/70 align-middle animate-pulse"
+                      aria-hidden
+                    />
+                  )}
                 </p>
 
-                <p className="mt-2 text-xs text-muted-foreground/80">
+                <p className="mt-1 text-xs text-muted-foreground/80">
                   Tap bubble to continue
                 </p>
               </CardContent>
             </Card>
+            <div className="pointer-events-none absolute -z-10 opacity-0" aria-hidden>
+              <span ref={measureLineRef} className="text-sm leading-relaxed whitespace-nowrap">
+                {currentLine}
+              </span>
+              <span
+                ref={measureHintRef}
+                className="mt-1 block text-xs whitespace-nowrap"
+              >
+                Tap bubble to continue
+              </span>
+            </div>
           </div>
 
           <Button
