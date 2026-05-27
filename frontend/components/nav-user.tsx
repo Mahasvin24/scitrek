@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SheetClose } from "@/components/ui/sheet"
@@ -72,18 +72,19 @@ function NavUserDesktop({ username, loading, onLogout }: NavUserProps) {
         <span className="truncate text-sm font-medium">{username}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="min-w-40">
-        <DropdownMenuLabel className="font-normal text-foreground">
-          {username}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          variant="destructive"
-          onClick={onLogout}
-          className="cursor-pointer"
-        >
-          <LogOutIcon />
-          Log out
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="font-normal text-foreground">
+            {username}
+          </DropdownMenuLabel>
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={onLogout}
+            className="cursor-pointer"
+          >
+            <LogOutIcon />
+            Log out
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   )
