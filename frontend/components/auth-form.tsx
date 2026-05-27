@@ -79,7 +79,7 @@ function AuthForm({ mode }: AuthFormProps) {
         const { access_token } = await login(username.trim(), encryptedPassword)
         setToken(access_token)
         toast.success("Signed in successfully")
-        router.push("/modules")
+        router.push("/modules/day-1")
       }
     } catch (err) {
       const message =
